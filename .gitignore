@@ -5,3 +5,12 @@ node_modules
 dist
 webapp/build-portals
 webapp/build-fedcap
+
+# Android build outputs
+android/mock-live-update-provider/build/
+android/mock-live-update-provider/.gradle/
+android/.gradle/
+android/build/
+
+# Generated Android assets
+android/mock-live-update-provider/src/main/assets/

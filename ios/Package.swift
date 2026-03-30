@@ -11,13 +11,13 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../../live-updates-provider-sdk")
+        .package(path: "../../live-update-provider-sdk")
     ],
     targets: [
         .target(
             name: "MockLiveUpdateProvider",
             dependencies: [
-                .product(name: "LiveUpdateProvider", package: "live-updates-provider-sdk")
+                .product(name: "LiveUpdateProvider", package: "live-update-provider-sdk")
             ],
             path: "Sources/MockLiveUpdateProvider"
         )

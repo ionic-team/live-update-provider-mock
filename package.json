@@ -6,10 +6,17 @@
   "capacitor": {
     "ios": {
       "src": "ios/Sources/MockLiveUpdateProviderPlugin"
+    },
+    "android": {
+      "src": "android/mock-live-update-provider"
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build:webapp": "cd webapp && npm run build:portals && npm run build:fedcap",
+    "bundle:android": "npm run build:webapp && node scripts/bundle-android-assets.js",
+    "build:android": "cd android && ./gradlew build",
+    "sync:android": "npm run bundle:android && npm run build:android"
   },
   "peerDependencies": {
     "@capacitor/core": ">=8"

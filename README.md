@@ -1,11 +1,12 @@
 # LiveUpdateProviderMock
 
-Mock provider for validating Federated Capacitor + live-updates-provider-sdk integration.
+Mock provider for validating Federated Capacitor + live-update-provider-sdk integration.
 
 ## What this package includes
 
-- iOS provider implementation (`MockLiveUpdateProvider`)
-- Minimal Capacitor iOS plugin (`MockLiveUpdateProviderPlugin`) that self-registers provider on load
+- iOS provider implementation (`MockLiveUpdateProvider` in Swift)
+- Android provider implementation (`MockLiveUpdateProvider` in Kotlin)
+- Minimal Capacitor plugin for both platforms that self-registers provider on load
 - 3 embedded dummy web bundles in the provider package:
   - `mock-assets/aurora`
   - `mock-assets/neon`
@@ -15,9 +16,18 @@ This allows FedCap consumers to stay web-config-only after installing this packa
 
 ## Install
 
+### iOS
+
 ```bash
 npm i @ionic-enterprise/mock-live-update-provider
 npx cap sync ios
+```
+
+### Android
+
+```bash
+npm i @ionic-enterprise/mock-live-update-provider
+npx cap sync android
 ```
 
 ## Use in Federated Capacitor config
@@ -45,7 +55,7 @@ providerConfig: {
 }
 ```
 
-Each sync advances to the next target and persists selection/index via `UserDefaults`.
+Each sync advances to the next target and persists selection/index via platform storage (iOS: `UserDefaults`, Android: `SharedPreferences`).
 
 ## `providerConfig` options
 
@@ -58,3 +68,17 @@ Each sync advances to the next target and persists selection/index via `UserDefa
 - `metadata: Record<string, unknown>`
 - `failWithMessage: string` to force sync failure
 - `syncDelayMs: number` to simulate latency
+
+## Platform-Specific Notes
+
+### iOS
+- Web assets are bundled as CocoaPod resource bundles
+- Assets are accessed directly from the app bundle
+- Persistence uses `UserDefaults`
+
+### Android
+- Web assets are bundled in the AAR assets directory
+- Assets are copied to the app's cache directory on first access
+- Cache is invalidated after 24 hours to prevent stale data
+- Persistence uses `SharedPreferences`
+- Assets must be pre-built and bundled before distribution
