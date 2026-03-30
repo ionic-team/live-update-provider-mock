@@ -65,9 +65,8 @@ class MockLiveUpdateManager(
                 callback?.onSuccess(result)
             } catch (e: Exception) {
                 Log.e(TAG, "Sync failed", e)
-                val error = io.ionic.liveupdateprovider.LiveUpdateError.SyncFailed(
-                    details = e.message ?: "Unknown sync error",
-                    cause = e
+                val error = io.ionic.liveupdateprovider.ProviderSyncError(
+                    message = e.message ?: "Unknown sync error",
                 )
                 callback?.onFailure(error)
             }
