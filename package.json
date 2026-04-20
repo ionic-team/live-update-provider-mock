@@ -1,11 +1,11 @@
 {
-  "name": "mock-live-update-provider",
+  "name": "live-update-provider-mock",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "capacitor": {
     "ios": {
-      "src": "ios/Sources/MockLiveUpdateProviderPlugin"
+      "src": "ios/Sources/LiveUpdateProviderMockPlugin"
     },
     "android": {
       "src": "android/mock-live-update-provider"
@@ -21,7 +21,7 @@
   "peerDependencies": {
     "@capacitor/core": ">=8"
   },
-  "dependencies": {
+  "devDependencies": {
     "typescript": "^6.0.2"
   }
 }
