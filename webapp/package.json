@@ -1,8 +1,9 @@
 {
-  "name": "ionic-sunrise-webapp",
+  "name": "webapp",
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "build": "npm run build:portals && npm run build:fedcap",
     "build:portals": "BUILD_PATH=build-portals react-scripts build",
     "build:fedcap": "BUILD_PATH=build-fedcap craco build"
   },
