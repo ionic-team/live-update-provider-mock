@@ -3,16 +3,37 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/gradle/wrapper/gradle-wrapper.jar",
+    "android/gradle/wrapper/gradle-wrapper.properties",
+    "android/gradlew",
+    "android/settings.gradle",
+    "android/src/main/AndroidManifest.xml",
+    "android/src/main/kotlin",
+    "dist",
+    "ios",
+    "src",
+    "webapp/build-fedcap",
+    "webapp/build-portals",
+    "LiveUpdateProviderMock.podspec",
+    "Package.swift",
+    "Package.resolved"
+  ],
   "capacitor": {
     "ios": {
       "src": "ios/Sources/LiveUpdateProviderMockPlugin"
     },
     "android": {
-      "src": "android/mock-live-update-provider"
+      "src": "android"
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build:webapp": "cd webapp && npm run build:portals && npm run build:fedcap",
+    "build:android": "cd android && ./gradlew build",
+    "sync:android": "npm run build:webapp && npm run build:android"
   },
   "peerDependencies": {
     "@capacitor/core": ">=8"
