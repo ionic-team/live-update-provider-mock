@@ -27,7 +27,7 @@ public final class LiveUpdateManagerMock: LiveUpdateManaging {
 #if SWIFT_PACKAGE
         syncSPM()
 #else
-        try? syncCocoaPods()
+        try syncCocoaPods()
 #endif
         
         switch config.appType {
@@ -46,15 +46,9 @@ public final class LiveUpdateManagerMock: LiveUpdateManaging {
     
     func syncCocoaPods() throws -> Bool {
         let hostBundle = Bundle(for: Self.self)
-        let bundleName: String = {
-            switch config.appType {
-            case .federatedCapacitor: return "LiveUpdateProviderMockResourcesFedCap"
-            case .portals: return "LiveUpdateProviderMockResourcesPortals"
-            }
-        }()
         
         guard
-            let bundleURL = hostBundle.url(forResource: bundleName, withExtension: "bundle"),
+            let bundleURL = hostBundle.url(forResource: config.appType.resourceBundleName, withExtension: "bundle"),
             let resourceBundle = Bundle(url: bundleURL),
             let resourceRoot = resourceBundle.resourceURL
         else {
