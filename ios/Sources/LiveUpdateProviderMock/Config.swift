@@ -1,44 +1,48 @@
 import Foundation
 import LiveUpdateProvider
 
-public struct LiveUpdateConfig: Decodable {
-    enum AppType: Decodable {
+public struct LiveUpdateProviderMockConfig {
+    enum BundleType {
         case federatedCapacitor
-        case portals
+        case portal
         
         init(_ raw: String) throws {
-            switch raw.lowercased() {
-            case "federatedcapacitor":
+            switch raw {
+            case "federatedCapacitor":
                 self = .federatedCapacitor
             case "portals":
-                self = .portals
+                self = .portal
             default:
-                throw LiveUpdateProviderError.invalidConfiguration("Invalid appType: \(raw)", underlyingError: nil)
+                throw LiveUpdateProviderError.invalidConfiguration("Invalid bundleType: \(raw)", underlyingError: nil)
             }
         }
         
         var resourceBundleName: String {
             switch self {
-            case .portals:
-                return "LiveUpdateProviderMockResourcesPortals"
+            case .portal:
+                return "LiveUpdateProviderMockResourcesPortal"
             case .federatedCapacitor:
                 return "LiveUpdateProviderMockResourcesFedCap"
             }
         }
+
+        var spmResourceDirectoryName: String {
+            switch self {
+            case .portal:
+                return "portal"
+            case .federatedCapacitor:
+                return "federated-capacitor"
+            }
+        }
     }
     
-    let appType: AppType
-    let autoSync: Bool
+    let bundleType: BundleType
     
     public init(_ config: [String: Any]) throws {
-        guard let appTypeRaw = config["appType"] as? String else {
-            throw LiveUpdateProviderError.invalidConfiguration("Missing required config key: appType", underlyingError: nil)
-        }
-        guard let autoSync = config["autoSync"] as? Bool else {
-            throw LiveUpdateProviderError.invalidConfiguration("Missing required config key: autoSync", underlyingError: nil)
+        guard let bundleTypeRaw = config["bundleType"] as? String else {
+            throw LiveUpdateProviderError.invalidConfiguration("Missing required config key: bundleType", underlyingError: nil)
         }
         
-        self.appType = try AppType(appTypeRaw)
-        self.autoSync = autoSync
+        self.bundleType = try BundleType(bundleTypeRaw)
     }
 }

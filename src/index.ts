@@ -1,8 +1,7 @@
 import { registerPlugin } from '@capacitor/core';
 
-export const LiveUpdateProviderMockPlugin = registerPlugin('LiveUpdateProviderMockPlugin');
+export const LiveUpdateProviderMockPlugin = registerPlugin('LiveUpdateProviderMock');
 
-export interface MockProviderConfig {
-  appType: 'portals' | 'federatedCapacitor';
-  autoSync: boolean;
+export interface LiveUpdateProviderMockConfig {
+  bundleType: 'portals' | 'federatedCapacitor';
 }

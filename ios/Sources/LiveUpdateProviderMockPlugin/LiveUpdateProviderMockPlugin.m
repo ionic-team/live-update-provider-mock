@@ -1,3 +1,3 @@
 #import <Capacitor/Capacitor.h>
 
-CAP_PLUGIN(LiveUpdateProviderMockPlugin, "MockLiveUpdateProvider", nil;)
+CAP_PLUGIN(LiveUpdateProviderMockPlugin, "LiveUpdateProviderMock", nil;)

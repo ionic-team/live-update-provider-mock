@@ -1,22 +1,19 @@
 {
   "name": "live-update-provider-mock",
   "version": "0.1.0",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "android/build.gradle",
-    "android/gradle.properties",
-    "android/gradle/wrapper/gradle-wrapper.jar",
-    "android/gradle/wrapper/gradle-wrapper.properties",
-    "android/gradlew",
-    "android/settings.gradle",
-    "android/src/main/AndroidManifest.xml",
-    "android/src/main/kotlin",
+    "android",
+    "!android/.gradle",
+    "!android/.idea",
+    "!android/.kotlin",
+    "!android/**/build",
+    "!android/local.properties",
     "dist",
-    "ios",
+    "ios/Sources",
     "src",
-    "webapp/build-fedcap",
-    "webapp/build-portals",
     "LiveUpdateProviderMock.podspec",
     "Package.swift",
     "Package.resolved"
@@ -26,17 +23,15 @@
       "src": "ios/Sources/LiveUpdateProviderMockPlugin"
     },
     "android": {
-      "src": "android"
+      "src": "android/plugin"
     }
   },
   "scripts": {
     "build": "tsc",
-    "build:webapp": "cd webapp && npm run build:portals && npm run build:fedcap",
-    "build:android": "cd android && ./gradlew build",
-    "sync:android": "npm run build:webapp && npm run build:android"
+    "build:android": "cd android && ./gradlew build"
   },
   "peerDependencies": {
-    "@capacitor/core": ">=8"
+    "@capacitor/core": "^8.0.0"
   },
   "devDependencies": {
     "typescript": "^6.0.2"

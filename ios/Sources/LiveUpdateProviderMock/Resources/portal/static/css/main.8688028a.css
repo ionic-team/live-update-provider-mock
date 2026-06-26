@@ -1,0 +1,2 @@
+*{box-sizing:border-box}body{background:linear-gradient(145deg,#eaf7ff,#d3ecfb);color:#143247;font-family:Avenir Next,Segoe UI,sans-serif;margin:0}.screen{display:grid;min-height:100vh;padding:20px;place-items:center}.panel{background:#ffffffeb;border:1px solid #14324726;border-radius:18px;box-shadow:0 12px 32px #14324726;padding:28px;text-align:center;width:min(640px,100%)}h1{font-size:clamp(24px,4vw,34px);line-height:1.1;margin:14px 0 8px}.blurb{color:#4a6b81;margin:0}.logo{height:auto;width:min(460px,100%)}
+/*# sourceMappingURL=main.8688028a.css.map*/
