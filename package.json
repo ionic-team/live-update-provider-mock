@@ -14,16 +14,15 @@
     "dist",
     "ios/Sources",
     "src",
-    "LiveUpdateProviderMock.podspec",
     "Package.swift",
     "Package.resolved"
   ],
   "capacitor": {
     "ios": {
-      "src": "ios/Sources/LiveUpdateProviderMockPlugin"
+      "src": "ios/Sources/LiveUpdateProviderMock"
     },
     "android": {
-      "src": "android/plugin"
+      "src": "android/live-update-provider-mock"
     }
   },
   "scripts": {

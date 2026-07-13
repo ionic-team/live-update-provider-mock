@@ -1,7 +1,10 @@
 import { registerPlugin } from '@capacitor/core';
 
-export const LiveUpdateProviderMockPlugin = registerPlugin('LiveUpdateProviderMock');
+export const LiveUpdateProviderMock = registerPlugin('LiveUpdateProviderMock');
 
-export interface LiveUpdateProviderMockConfig {
-  bundleType: 'portals' | 'federatedCapacitor';
+export interface MockProviderConfig {
+  /** Force `sync` to fail, to exercise error handling. Defaults to false. */
+  simulateFailure?: boolean;
+  /** Metadata returned with a successful sync result. Defaults to an empty object. */
+  metadata?: Record<string, unknown>;
 }

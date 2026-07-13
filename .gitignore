@@ -9,5 +9,4 @@ android/.gradle/
 android/build/
 android/local.properties
 android/.idea/
-android/core/build/
-android/plugin/build/
+android/live-update-provider-mock/build/
