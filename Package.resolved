@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ionic-team/live-update-provider-sdk",
       "state" : {
-        "revision" : "090663d12ad6512b774f65064c48aefee3a0159d",
-        "version" : "0.1.0-alpha.2"
+        "revision" : "4c28d81397a467a10014063f69f1271b3c5476ed",
+        "version" : "1.0.0"
       }
     }
   ],

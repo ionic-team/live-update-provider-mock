@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmock_remote_build=self.webpackChunkmock_remote_build||[]).push([[451],{451(e,t,n){n.r(t),n.d(t,{default:()=>l});var i=n(884);function l(){return i.createElement("div",{style:{padding:16,fontFamily:"sans-serif",textAlign:"center"}},i.createElement("img",{src:"/helpinfo/portals.png",alt:"Ionic Portals",width:120,height:120}))}}}]);

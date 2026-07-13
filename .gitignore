@@ -3,14 +3,10 @@
 .swiftpm/
 node_modules
 dist
-webapp/build-portals
-webapp/build-fedcap
 
 # Android
-android/live-update-provider-mock/build/
-android/live-update-provider-mock/.gradle/
 android/.gradle/
 android/build/
 android/local.properties
 android/.idea/
-android/src/main/assets/
+android/live-update-provider-mock/build/

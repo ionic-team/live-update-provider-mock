@@ -1,7 +1,6 @@
 pluginManagement {
     repositories {
         google()
-        mavenCentral()
         gradlePluginPortal()
     }
 }
@@ -11,8 +10,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        mavenLocal()
     }
 }
 
 rootProject.name = "live-update-provider-mock"
+
+include(":live-update-provider-mock")

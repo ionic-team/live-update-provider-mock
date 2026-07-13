@@ -1,200 +1,173 @@
 # Live Update Provider Mock
 
-Reference Live Update Provider for testing and demonstrating third-party Live Update Provider implementations across iOS and Android.
-
-This package is used by the Live Update Provider SDK test workflow, and it is also intended to serve as a practical example for implementers building their own Live Update Provider implementation for Federated Capacitor and Portals applications.
-
-For the Live Update Provider interfaces and SDK source, see the [Live Update Provider SDK](https://github.com/ionic-team/live-update-provider-sdk).
+A reference [Live Update Provider](https://github.com/ionic-team/live-update-provider-sdk) for [Ionic Portals](https://ionic.io/docs/portals/) and [Federated Capacitor](https://ionic.io/docs/portals/for-capacitor/overview), backed by bundled web assets instead of a live service. It exists to show how to package and wire a provider, and to give the SDK and host apps a deterministic provider to test against.
 
 ## Overview
 
-Live Update Provider Mock implements the native interfaces expected by the Live Update Provider SDK. It registers a Live Update Provider with the id `mock`, resolves a bundled web application for the requested app type, and reports that directory through the SDK manager contract.
+Like any provider, the mock centers on `ProviderManager`: `sync()` prepares a web app and exposes it through `latestAppDirectory` for the host runtime to load. Where a production provider fetches, verifies, and activates assets from a backend, the mock resolves a deterministic bundled fixture.
 
-The implementation demonstrates the core responsibilities of a Live Update Provider:
+It supports both integration paths defined by the SDK:
 
-- Registering a native Live Update Provider with the Live Update Provider registry.
-- Parsing implementation-specific configuration.
-- Creating a platform manager for each app configuration.
-- Resolving or downloading app assets.
-- Updating `latestAppDirectory` after sync.
-- Returning a sync result through the SDK callback/result APIs.
+- **Ionic Portals** constructs `MockProviderManager` directly — no Capacitor involved.
+- **Federated Capacitor** resolves the provider by its Capacitor plugin name (`LiveUpdateProviderMock`). The plugin class conforms to `LiveUpdateProvider` directly — there is no separate provider object or registration step.
 
-This package is intentionally simple. It does not contact a remote update service. Instead, it ships static web assets with the package so SDK integrations can be tested deterministically.
+For the contract these types belong to and the full data flow, see the [SDK README](https://github.com/ionic-team/live-update-provider-sdk#readme).
 
-## Supported App Types
+## Requirements
 
-The mock Live Update Provider supports two app types:
+| Target | Minimum |
+| --- | --- |
+| Capacitor | 8.x |
+| iOS | 15.0 |
+| Android | API 24 |
 
-| App type | Config value | Bundled asset path |
-| --- | --- | --- |
-| Portals | `portals` | `webapp/build-portals` |
-| Federated Capacitor | `federatedCapacitor` | `webapp/build-fedcap` |
-
-## Installation
-
-```bash
-npm install live-update-provider-mock
-npx cap sync
-```
-
-After Capacitor sync, the native plugin registers itself as a Live Update Provider with:
-
-```text
-providerId = "mock"
-```
+The TypeScript package builds to ES2022. The native toolchain versions track the [Capacitor 8 requirements](https://capacitorjs.com/docs/updating/8-0).
 
 ## Configuration
 
-Use the mock Live Update Provider from your Live Update configuration by setting `providerId` to `mock` and passing implementation-specific config under `providerConfig`.
+A host app selects the mock by its Capacitor plugin name. Which host you are — Portals or Federated Capacitor — is decided by which type you use (`MockProviderManager` directly, or the `LiveUpdateProviderMock` plugin), not by configuration, so `providerConfig` is reserved for test scenarios and is entirely optional:
 
 ```ts
 liveUpdateConfig: {
-  providerId: "mock",
+  providerId: "LiveUpdateProviderMock",
   autoUpdateMethod: "none",
   providerConfig: {
-    appType: "federatedCapacitor",
-    autoSync: true
+    // all optional
+    simulateFailure: true,            // force sync to fail, to exercise error handling
+    metadata: { version: "1.2.3" }    // returned in the sync result
   }
 }
 ```
 
-### Provider Config
-
-| Key | Type | Required | Description |
+| Key | Type | Default | Effect |
 | --- | --- | --- | --- |
-| `appType` | `"portals"` or `"federatedCapacitor"` | Yes | Selects which bundled web application should be resolved. |
-| `autoSync` | `boolean` | Yes | When `true`, the Live Update Provider resolves assets during manager creation. Explicit `sync()` is still supported. |
+| `simulateFailure` | boolean | `false` | `sync` fails so callers can exercise error handling. |
+| `metadata` | object | `{}` | Returned in the `MetadataSyncResult`. |
 
-## Package Structure
+On success the mock resolves a single bundled fixture (`index.html` + `remoteEntry.js`) and points `latestAppDirectory` at it. The fixture is a deterministic stub for integration testing, not a production web app.
 
-```text
-.
-├── android/
-│   ├── build.gradle
-│   └── src/main/kotlin/io/ionic/liveupdateprovidermock/
-├── ios/
-│   └── Sources/
-│       ├── LiveUpdateProviderMock/
-│       └── LiveUpdateProviderMockPlugin/
-├── src/
-├── webapp/
-│   ├── build-fedcap/
-│   └── build-portals/
-├── LiveUpdateProviderMock.podspec
-├── Package.swift
-└── package.json
+## Implementation
+
+The mock is a single native module on each platform: `MockProviderManager` implements the provider contract, and `LiveUpdateProviderMockPlugin` is the Capacitor plugin whose class conforms to `LiveUpdateProvider` directly. Portals uses the manager without touching the plugin; Federated Capacitor resolves the plugin by name and calls `createManager` on it. The snippets below are condensed; see the source for the full asset resolver.
+
+### The manager
+
+`MockProviderManager` implements the `ProviderManager` contract directly on both platforms. It resolves the bundled app directory, points `latestAppDirectory` at it, and returns the configured metadata. A Portals app constructs this manager directly; nothing else is required.
+
+**iOS** — [`MockProviderManager.swift`](ios/Sources/LiveUpdateProviderMock/MockProviderManager.swift)
+
+```swift
+public final class MockProviderManager: ProviderManager {
+    public var latestAppDirectory: URL?
+
+    public func sync() async throws -> (any ProviderSyncResult)? {
+        if config.simulateFailure {
+            throw MockSyncError(message: "Simulated sync failure for LiveUpdateProviderMock")
+        }
+        guard let resourceRoot = Bundle.module.url(forResource: "app", withExtension: nil) else {
+            throw MockSyncError(message: "Can't find resource directory")
+        }
+        latestAppDirectory = resourceRoot
+        return MetadataSyncResult(metadata: config.metadata)
+    }
+}
 ```
 
-### TypeScript
+**Android** — [`MockProviderManager.kt`](android/live-update-provider-mock/src/main/kotlin/io/ionic/liveupdateprovidermock/MockProviderManager.kt)
 
-`src/index.ts` exports the Capacitor plugin registration and the implementation config type used by consumers.
+```kotlin
+class MockProviderManager(...) : ProviderManager {
+    override var latestAppDirectory: File? = null
 
-### iOS
-
-The iOS implementation is split into two Swift targets:
-
-- `LiveUpdateProviderMock`: the Live Update Provider and manager implementation.
-- `LiveUpdateProviderMockPlugin`: the Capacitor plugin that registers the Live Update Provider.
-
-For CocoaPods consumers, static web assets are packaged as resource bundles:
-
-- `LiveUpdateProviderMockResourcesPortals.bundle`
-- `LiveUpdateProviderMockResourcesFedCap.bundle`
-
-On sync, the manager resolves the selected resource bundle and assigns its root URL to `latestAppDirectory`.
-
-Swift Package Manager support is scaffolded, but bundled resource support should be completed before relying on SPM for asset-backed sync behavior.
-
-### Android
-
-The Android implementation is a single Gradle library under `android/`.
-
-Key classes:
-
-- `MockLiveUpdatePlugin`: Capacitor plugin and Live Update Provider registration entry point.
-- `LiveUpdateConfig`: implementation config parser and validation.
-- `MockLiveUpdateManager`: SDK manager implementation.
-- `AssetBundleResolver`: copies packaged APK assets to cache and returns a filesystem directory.
-
-Android packages assets under:
-
-```text
-android/src/main/assets/portals
-android/src/main/assets/federated-capacitor
+    override suspend fun sync(): ProviderSyncResult? = withContext(Dispatchers.IO) {
+        if (config.simulateFailure) {
+            throw MockSyncException("Simulated sync failure for LiveUpdateProviderMock")
+        }
+        val appDirectory = assetBundleResolver.resolve()
+            ?: throw MockSyncException("bundled assets were not resolved")
+        latestAppDirectory = appDirectory
+        MetadataSyncResult(metadata = config.metadata)
+    }
+}
 ```
 
-At runtime, the manager copies the selected asset tree to:
+The manager implements `ProviderManager.sync` as a plain suspend function and moves its blocking asset-resolution work onto `Dispatchers.IO` itself, since `sync` may be called from any dispatcher (including the caller's own).
 
-```text
-<cache>/mock_bundles/portals
-<cache>/mock_bundles/federated-capacitor
+### The Federated Capacitor plugin
+
+For Federated Capacitor, the Capacitor plugin class conforms to `LiveUpdateProvider` directly and implements `createManager`. There is no separate provider object and no registration call — the plugin is resolved by its Capacitor plugin name.
+
+**iOS** — [`LiveUpdateProviderMockPlugin.swift`](ios/Sources/LiveUpdateProviderMock/LiveUpdateProviderMockPlugin.swift)
+
+```swift
+@objc(LiveUpdateProviderMockPlugin)
+class LiveUpdateProviderMockPlugin: CAPPlugin, LiveUpdateProvider {
+    public func createManager(configuration: [String: Any]) throws -> any ProviderManager {
+        let config = try MockProviderConfig(configuration)
+        return MockProviderManager(config: config)
+    }
+}
 ```
 
-This copy step is necessary because Android APK assets are not directly represented as normal filesystem directories.
+**Android** — [`LiveUpdateProviderMockPlugin.kt`](android/live-update-provider-mock/src/main/kotlin/io/ionic/liveupdateprovidermock/LiveUpdateProviderMockPlugin.kt)
 
-## Building
+```kotlin
+@CapacitorPlugin(name = "LiveUpdateProviderMock")
+class LiveUpdateProviderMockPlugin : Plugin(), LiveUpdateProvider {
+    override fun createManager(context: Context, configuration: Map<String, Any>): ProviderManager {
+        val providerConfig = MockProviderConfig.from(configuration)
+        return MockProviderManager(context = context, config = providerConfig)
+    }
+}
+```
 
-Build the TypeScript package:
+## Project Structure
+
+Each platform builds the provider manager and the Capacitor plugin adapter as a single module — iOS as one SwiftPM target, Android as one Gradle module (`:live-update-provider-mock`):
+
+| Platform | Module |
+| --- | --- |
+| iOS | `ios/Sources/LiveUpdateProviderMock` |
+| Android | `android/live-update-provider-mock` |
+| Web | `src/index.ts` |
+
+Bundled web assets live under `ios/Sources/LiveUpdateProviderMock/Resources` and `android/live-update-provider-mock/src/main/assets`.
+
+## Development
+
+**Web (TypeScript)**
 
 ```bash
 npm run build
 ```
 
-Build the web assets:
+**Android**
 
 ```bash
-npm run build:webapp
+npm run build:android            # build the Android module
+cd android && ./gradlew test     # unit tests
 ```
 
-Build and verify Android:
+Instrumented tests, if added under `android/live-update-provider-mock/src/androidTest`, need a connected device or emulator (`./gradlew :live-update-provider-mock:connectedAndroidTest`). The Android build uses the Capacitor 8 toolchain (Gradle 8.14.3, Android Gradle Plugin 8.13.0, Kotlin 2.2.20, `compileSdk` 36); build with the JDK bundled in Android Studio.
+
+**iOS**
 
 ```bash
-npm run sync:android
+swift build                      # build the SPM target
 ```
 
-`sync:android` builds the web assets, then runs the Android Gradle build. During Android `preBuild`, Gradle copies:
+## From Mock to Production
 
-- `webapp/build-portals` to `android/src/main/assets/portals`
-- `webapp/build-fedcap` to `android/src/main/assets/federated-capacitor`
+This repository is a reference for package shape and provider boundaries, not a production update strategy. It satisfies the SDK's [provider responsibilities](https://github.com/ionic-team/live-update-provider-sdk#provider-responsibilities) against static fixtures.
 
-If Gradle fails with a Java version error, use a supported Android JDK, such as Android Studio's bundled JBR.
+A production provider keeps the same contract but replaces the bundled asset resolver with service-backed logic: check for updates, download web assets, verify the result, store the state needed for rollback, and point `latestAppDirectory` at a local app directory only once it is valid.
 
-## SDK Dependencies
+## Related Resources
 
-This package targets:
+- [Live Update Provider SDK](https://github.com/ionic-team/live-update-provider-sdk) — the contract this repository implements
+- [Federated Capacitor live updates](https://ionic.io/docs/portals/for-capacitor/live-updates)
+- [Creating a Capacitor plugin](https://capacitorjs.com/docs/plugins/creating-plugins)
 
-- Capacitor `>= 8`
-- Android Live Update Provider SDK `io.ionic:liveupdateprovider:0.1.0-alpha.2`
-- iOS Live Update Provider SDK package `live-update-provider-sdk` from `0.1.0-alpha.2`
+## License
 
-SDK source: [ionic-team/live-update-provider-sdk](https://github.com/ionic-team/live-update-provider-sdk)
-
-Implementers should keep their app, Live Update Provider implementation, and SDK dependency aligned to the same SDK artifact/version. Mixing SDK coordinates can produce duplicate native classes on Android.
-
-## Building a Live Update Provider Implementation
-
-Use this repository as a reference for the shape of a Live Update Provider implementation, not as a production update strategy.
-
-A production implementation will usually replace the mock asset resolver with logic that:
-
-- Authenticates with the implementer's update service.
-- Checks for an available update.
-- Downloads or selects the correct web bundle.
-- Verifies integrity before activation.
-- Stores update metadata and rollback state.
-- Updates `latestAppDirectory` only after the bundle is ready for use.
-- Returns implementation-specific metadata in the sync result.
-
-The important contract is that the manager exposes a local app directory through `latestAppDirectory` and reports sync success or failure through the SDK result APIs.
-
-## Release Checklist
-
-Before publishing this package:
-
-1. Run `npm run build`.
-2. Run `npm run build:webapp`.
-3. Run the Android build with a supported JDK.
-4. Verify package contents with `npm pack --dry-run`.
-5. Confirm `package.json`, `LiveUpdateProviderMock.podspec`, and release tags use the intended version.
-
-The npm package must include `webapp/build-portals` and `webapp/build-fedcap`; those directories are required by the native asset packaging paths.
+Released under the MIT License. See [LICENSE](LICENSE).
